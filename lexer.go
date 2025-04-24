@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"slices"
 	"strings"
+	"unicode"
 )
 
-var Tokens []Token
 var keywords = []string{
 	"def",
 	"return",
@@ -30,32 +30,77 @@ var typesList = []string{
 	"null",
 	"char",
 }
+var tmp string
 var operators = []string{
 	"*",
 	"/",
 	"-",
 	"+",
 	"%",
+	"=",
 }
 
-func Lexer(SourceCode string) {
+func Lexer(SourceCode string) []Token {
+	var Tokens []Token
 
 	lines := strings.Lines(SourceCode)
 
 	for line := range lines {
-		words := strings.Fields(line)
-
-		for _, word := range words {
-			if Has(keywords, word) {
-				Tokens = append(Tokens, Token{Type: "keyword", Value: word})
-			} else if Has(typesList, word) {
-				Tokens = append(Tokens, Token{Type: "type", Value: word})
-			} else if Has(operators, word) {
-				Tokens = append(Tokens, Token{Type: "operator", Value: word})
+		for _, char := range line {
+			if unicode.IsLetter(char) {
+				if GetType(tmp) != "identifier" {
+					Tokens = append(Tokens, Token{
+						Type:  GetType(tmp),
+						Value: tmp,
+					})
+					tmp = ""
+				}
+				tmp += string(char)
+			} else if unicode.IsNumber(char) {
+				tmp = ""
+				Tokens = append(Tokens, Token{
+					Type:  "number",
+					Value: int(char - '0'),
+				})
+			} else if unicode.IsSpace(char) {
+				Tokens = append(Tokens, Token{
+					Type:  GetType(tmp),
+					Value: tmp,
+				})
+				tmp = ""
+			} else {
+				if GetType(tmp) != "identifier" && GetType(string(char)) != "operator" {
+					Tokens = append(Tokens, Token{
+						Type:  GetType(tmp),
+						Value: tmp,
+					})
+					tmp = ""
+				}
+				tmp += string(char)
 			}
-
 		}
 	}
+	return Tokens
+}
 
-	fmt.Println(Tokens)
+func GetType(str string) string {
+	if slices.Contains(keywords, str) {
+		return "keyword"
+	}
+	if slices.Contains(typesList, str) {
+		return "type"
+	}
+	if slices.Contains(operators, str) {
+		return "operator"
+	}
+	return "identifier"
+}
+
+func NaN(str string) bool {
+	for _, v := range str {
+		if !unicode.IsNumber(v) {
+			return false
+		}
+	}
+	return true
 }

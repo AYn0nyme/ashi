@@ -1,8 +1,8 @@
 package main
 
-func main() {
-	Lexer("def string stupid = 5+5")
-}
+import "fmt"
 
-// c'est pas efficace ce que je fais, si je fais mot par mot, je vais miss les 5+5
-// donc faut faire char par char...
+func main() {
+	tokens := Lexer("def number index = index++")
+	fmt.Println("def number index = index++", tokens)
+}
